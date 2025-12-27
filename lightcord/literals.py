@@ -16,7 +16,6 @@
 
 from typing import Literal
 
-
 Events = Literal[
     "GUILD_BAN_ADD",
     "MESSAGE_UPDATE",

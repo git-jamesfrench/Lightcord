@@ -16,8 +16,7 @@
 
 """Lightcord is a python library for interacting with the discord API and Gateway.
 
-* **Documentation:** https://dispy.gitbook.io/docs
-* **Github Page:** https://github.com/git-jamesfrench/Lightcord
+* **Github Page:** https://github.com/lightcord-py/Lightcord
 * **License:** [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.fr.html)"""
 
 from lightcord.gateway import Gateway
@@ -44,6 +43,7 @@ class Client():
         
     def start(self, token: str = None) -> None:
         """Start your client, making it online and able to receive events from discord.
+        
         :param token: Your private token. You can get it on your Developer Portal.
         :type token: `str`"""
         if token:

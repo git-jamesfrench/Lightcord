@@ -48,9 +48,8 @@ class Gateway():
                 await self.opcodes()
                 
                 if ws.closed:
-                    print(f'Connection was closed: {ws.close_code}.')
                     message = await ws.receive()
-                    print(message.data)
+                    # ws.close_code, message.data
         finally:
             await self.ws.close()
             if self.heartbeats.running:

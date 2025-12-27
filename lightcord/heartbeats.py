@@ -35,7 +35,6 @@ class Heartbeats:
             await asyncio.sleep(self.interval)
             if self.running:
                 await self.ws.send_json({"op": 1, "d": 'null'})
-                print('Sending heartbeat')
 
     def run(self, ws, interval):
         self.ws = ws
