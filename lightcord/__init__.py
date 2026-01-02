@@ -33,36 +33,41 @@ class Client():
         :type token: `str`
         :param intents: The intents to send over to discord, this is optional because Lightcord already generate an intents.
         :type intents: Optional `int | str`"""
-        # Main Variables
-        self.token = token
         self.intents = int(intents)
-        
-        # Modules
+
         self.handlers = Handlers()
-        self.gateway = Gateway(token = self.token, intents = self.intents, handlers = self.handlers)
+        self.gateway = Gateway(token, intents)
         
-    def start(self, token: str = None) -> None:
+    async def start_async(self):
+        await self.gateway.start()
+    
+    def start(self, token: str = None, intents: int | str = 0):
         """Start your client, making it online and able to receive events from discord.
         
         :param token: Your private token. You can get it on your Developer Portal.
         :type token: `str`"""
-        if token:
-            self.token = token
+        if token: self.gateway.token = token
+        if intents: self.gateway.intents = intents
+        self.gateway.handlers = self.handlers
         
-        asyncio.run(self.gateway.start())
+        try:
+            asyncio.get_event_loop()
+            return self.start_async()
+        except RuntimeError:
+            asyncio.run(self.gateway.start())
         
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop your client gracefully, making it offline and unable to receive events from discord."""
-        asyncio.run(self.gateway.stop())
+        await self.gateway.stop()
         
-    def on(self, event: Events = None, function: Callable = None, *, once: bool = False) -> None:
+    def on(self, event: Events = None, function: Callable = None, *, once: bool = False):
         """
         Will call `function` when `event` happen. Will automatically add needed intents if intents are not defined by the user.
         
         Can be used as a decorator: 
         ```
         @bot.on("READY")
-        def on_ready():
+        async def on_ready():
             print("READY!")
         ```
         :param event: The event that will trigger the defined `function`.
@@ -81,7 +86,7 @@ class Client():
         if function is not None: return decorator(function)
         else: return decorator
         
-    def once(self, event: Events = None, function: Callable = None) -> None:
+    def once(self, event: Events = None, function: Callable = None):
         """
         Will call `function` once when `event` happen. Will automatically add needed intents if intents are not defined by the user. 
         
@@ -90,7 +95,7 @@ class Client():
         Can be used as a decorator: 
         ```
         @bot.once("READY")
-        def on_ready():
+        async def on_ready():
             print("READY!")
         ```
         :param event: The event that will trigger the defined `function`.

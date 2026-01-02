@@ -16,48 +16,57 @@
 
 import aiohttp
 import asyncio
-import threading
 import json
-from lightcord.heartbeats import Heartbeats
 from lightcord.handlers import Handlers
+from contextlib import suppress
 
 class Gateway():
-    def __init__(self, token: str, intents: int, handlers: Handlers):
+    def __init__(self, token: str = None, intents: int = None):
         self.token = token
-        self.ws = None
         self.intents = intents
-        self.loop = asyncio.new_event_loop()
-        self.session = None
-        self.heartbeats = Heartbeats()
-        self.handlers = handlers
-        
-    def run_loop(self):
-        asyncio.set_event_loop(self.loop)
-        self.loop.run_forever()
-        
-    async def generate_session(self):
-        self.session = aiohttp.ClientSession()
-        
+        self.handlers: Handlers = None
+
+        self.websocket_task: asyncio.Task = None
+        self.heartbeats_task: asyncio.Task = None
+        self.session: aiohttp.ClientSession = None
+        self.ws: aiohttp.ClientWebSocketResponse = None
+
     async def start(self):
-        threading.Thread(target=self.run_loop, daemon=True).start()
-        await self.generate_session()
+        if self.token is None:
+            raise ValueError('No token provided.')
         
+        self.session = aiohttp.ClientSession()
+        self.websocket_task = asyncio.create_task(self.websocket())
+
+        try:
+            await self.websocket_task
+        except asyncio.CancelledError:
+            pass
+
+    async def stop(self):
+        if self.websocket_task:
+            self.websocket_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self.websocket_task
+        
+    async def websocket(self):
         try:
             async with self.session.ws_connect('wss://gateway.discord.gg/?v=10&encoding=json') as ws:
                 self.ws = ws
                 await self.opcodes()
-                
+
                 if ws.closed:
                     message = await ws.receive()
                     # ws.close_code, message.data
+        except asyncio.CancelledError:
+            raise
         finally:
-            await self.ws.close()
-            if self.heartbeats.running:
-                self.heartbeats.stop()
-            
-    async def stop(self):
-        if self.ws and not self.ws.closed:
-            await self.ws.close()
+            if self.ws and not self.ws.closed: await self.ws.close()
+            if self.session and not self.session.closed: await self.session.close()
+            if self.heartbeats_task:
+                self.heartbeats_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await self.heartbeats_task
             
     async def identify(self):
         payload = {
@@ -73,7 +82,15 @@ class Gateway():
             }
         }
         await self.ws.send_json(payload)
-            
+
+    async def heartbeats(self, interval: float):
+        try:
+            while True:
+                await asyncio.sleep(interval)
+                await self.ws.send_json({"op": 1, "d": 'null'})
+        except asyncio.CancelledError:
+            raise
+
     async def opcodes(self):
         async for msg in self.ws:
             d = json.loads(msg.data)
@@ -81,7 +98,7 @@ class Gateway():
             if d['op'] == 0: # Event
                 await self.handlers.call_handlers(d['t'], d['d'])
             elif d['op'] == 10: # After connecting
-                self.heartbeats.run(self.ws, d['d']['heartbeat_interval'] / 1000)
+                self.heartbeats_task = asyncio.create_task(self.heartbeats(d['d']['heartbeat_interval'] / 1000))
                 await self.identify()
             elif d['op'] == 11: # Heartbeat acknowledgement
                 pass
