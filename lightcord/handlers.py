@@ -22,8 +22,8 @@ class Handlers:
         self.handlers = {}
         
     def add_handler(self, event: str, fn: Callable, once: bool):
-        self.handlers.setdefault(event, [])
-        self.handlers[event].append({
+        self.handlers.setdefault(event.upper(), [])
+        self.handlers[event.upper()].append({
             "fn": fn,
             "once": once
         })

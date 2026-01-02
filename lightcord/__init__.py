@@ -22,7 +22,9 @@
 from lightcord.gateway import Gateway
 from lightcord.handlers import Handlers
 from lightcord.literals import Events
+from lightcord.events import EventsList
 from typing import Callable
+from inspect import iscoroutinefunction
 import asyncio
 
 class Client():
@@ -48,8 +50,15 @@ class Client():
         :type token: `str`"""
         if token: self.gateway.token = token
         if intents: self.gateway.intents = intents
+
+        # Adding events in class, for using lightcord with a class.
+        for value in self.__dir__():
+            if value.upper() in EventsList:
+                self.on(value, getattr(self, value))
+
         self.gateway.handlers = self.handlers
         
+        # Making so this function can be used in a loop or not (e.g. asyncio.create_task(bot.start()))
         try:
             asyncio.get_event_loop()
             return self.start_async()
@@ -78,11 +87,20 @@ class Client():
         :type once: `bool`
         """
         def decorator(fn):
-            self.handlers.add_handler(
-                event,
-                fn,
-                once
-            )
+            if iscoroutinefunction(fn):
+                # Checking if we can use the name of the function as the event
+                if event is None and fn.__name__.upper() not in EventsList:
+                    raise ValueError(f'{fn} name\'s is not a valid event.')
+                eventname = fn.__name__.upper() if (event is None) else event
+
+                # Making the function an handler
+                self.handlers.add_handler(
+                    eventname,
+                    fn,
+                    once
+                )
+            else:
+                raise ValueError(f'{fn} is not a coroutine!')
         if function is not None: return decorator(function)
         else: return decorator
         
