@@ -103,7 +103,6 @@ class Gateway():
                     await self.close(1006)
                     break
                 await self.ws.send_json({"op": 1, "d": self.s_number_of_events})
-                print("HEARTBEAT")
                 self.waiting_for_heartbeat_ack = True
                 first = False
         except asyncio.CancelledError:
