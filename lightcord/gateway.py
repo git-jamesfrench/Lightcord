@@ -63,7 +63,7 @@ class Gateway():
 
                 if ws.closed:
                     message = await ws.receive()
-                    # ws.close_code, message.data
+                    #print(ws.close_code, message.data)
         except asyncio.CancelledError:
             raise
         finally:
@@ -73,6 +73,9 @@ class Gateway():
         if self.ws and not self.ws.closed: 
             await self.ws.close(code = code)
         if self.session and not self.session.closed: await self.session.close()
+        await self.stop_heartbeats()
+
+    async def stop_heartbeats(self):
         if self.heartbeats_task:
             self.heartbeats_task.cancel()
             with suppress(asyncio.CancelledError):
@@ -93,12 +96,13 @@ class Gateway():
         }
         await self.ws.send_json(payload)
 
-    async def heartbeats(self):
+    async def heartbeats(self, skip = False):
         first = True
         try:
             while True:
                 # The random is just a jitter asked by discord, only for the first heartbeat.
-                await asyncio.sleep(self.heartbeats_interval * random() if first else self.heartbeats_interval)
+                if not skip or not first:
+                    await asyncio.sleep(self.heartbeats_interval * random() if first else self.heartbeats_interval)
                 if self.waiting_for_heartbeat_ack: # Closes connection if it is "zombified"
                     await self.close(1006)
                     break
@@ -117,9 +121,16 @@ class Gateway():
             
             if d['op'] == 0: # Event
                 await self.handlers.call_handlers(d['t'], d['d'])
+
+            elif d['op'] == 1: # Heartbeat request
+                self.waiting_for_heartbeat_ack = False
+                await self.stop_heartbeats()
+                self.heartbeats_task = asyncio.create_task(self.heartbeats(True))
+
             elif d['op'] == 10: # After connecting
                 self.heartbeats_interval = d['d']['heartbeat_interval'] / 1000
-                self.heartbeats_task = asyncio.create_task(self.heartbeats())
+                self.heartbeats_task = asyncio.create_task(self.heartbeats(False))
                 await self.identify()
+
             elif d['op'] == 11: # Heartbeat acknowledgement
                 self.waiting_for_heartbeat_ack = False
