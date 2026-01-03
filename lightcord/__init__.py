@@ -22,7 +22,7 @@
 from lightcord.gateway import Gateway
 from lightcord.handlers import Handlers
 from lightcord.literals import Events
-from lightcord.events import EventsList
+from lightcord.events import events, events_alias
 from typing import Callable
 from inspect import iscoroutinefunction
 import asyncio
@@ -32,9 +32,10 @@ class Client():
         """Define a discord client.
         
         :param token: Your private token. You can get it on your Developer Portal.
-        :type token: `str`
-        :param intents: The intents to send over to discord, this is optional because Lightcord already generate an intents.
-        :type intents: Optional `int | str`"""
+        :type token: Optional[`str`]
+        :param intents: The intents to send over to discord.
+        :type intents: Optional[`int | str`]
+        """
         self.intents = int(intents)
 
         self.handlers = Handlers()
@@ -47,14 +48,21 @@ class Client():
         """Start your client, making it online and able to receive events from discord.
         
         :param token: Your private token. You can get it on your Developer Portal.
-        :type token: `str`"""
+        :type token: Optional[`str`]
+        :param intents: The intents to send over to discord.
+        :type intents: Optional[`int | str`]
+        """
         if token: self.gateway.token = token
         if intents: self.gateway.intents = intents
 
         # Adding events in class, for using lightcord with a class.
         for value in self.__dir__():
-            if value.upper() in EventsList:
-                self.on(value, getattr(self, value))
+            function_name = value.upper()
+
+            if function_name in events:
+                self.on(function_name, getattr(self, function_name))
+            elif function_name in events_alias:
+                self.on(events_alias[function_name], getattr(self, function_name))
 
         self.gateway.handlers = self.handlers
         
@@ -79,19 +87,28 @@ class Client():
         async def on_ready():
             print("READY!")
         ```
-        :param event: The event that will trigger the defined `function`.
-        :type event: `str`
-        :param function: The function that will be called when the defined `event` happen.
-        :type function: `Callable`
-        :param once: Will make the function be triggered once when `event` happens, making others occurrences be ignored.
-        :type once: `bool`
+        :param event: The event that will trigger the defined function. Function name will be used if not given.
+        :type event: Optional[`str`]
+        :param function: The function that will be called when the defined event happen.
+        :type function: Optional[`Callable`]
+        :param once: Will make the function be triggered once when event happens, making others occurrences be ignored.
+        :type once: Optional[`bool`]
         """
         def decorator(fn):
             if iscoroutinefunction(fn):
                 # Checking if we can use the name of the function as the event
-                if event is None and fn.__name__.upper() not in EventsList:
-                    raise ValueError(f'{fn} name\'s is not a valid event.')
-                eventname = fn.__name__.upper() if (event is None) else event
+                if event is None:
+                    function_name = fn.__name__.upper()
+
+                    if function_name in events:
+                        eventname = function_name
+                    elif function_name in events_alias:
+                        eventname = events_alias[function_name]
+                    else:
+                        raise ValueError(f'{fn.__name__} is not a valid event.')
+                else:
+                    eventname = event
+
 
                 # Making the function an handler
                 self.handlers.add_handler(
@@ -116,10 +133,10 @@ class Client():
         async def on_ready():
             print("READY!")
         ```
-        :param event: The event that will trigger the defined `function`.
-        :type event: `str`
-        :param function: The function that will be called when the defined `event` happen.
-        :type function: `Callable`
+        :param event: The event that will trigger the defined function. Function name will be used if not given.
+        :type event: Optional[`str`]
+        :param function: The function that will be called when the defined event happen.
+        :type function: Optional[`Callable`]
         """
         def decorator(fn):
             self.on(event = event, function = fn, once = True)

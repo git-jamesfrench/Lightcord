@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-EventsList = [
+events = [
     "GUILD_BAN_ADD",
     "MESSAGE_UPDATE",
     "GUILD_CREATE",
@@ -94,3 +94,12 @@ EventsList = [
     "AUTO_MODERATION_ACTION_EXECUTION",
     "STAGE_INSTANCE_DELETE"
 ]
+
+events_alias = {
+    "ON_READY": "READY",
+    "ON_MESSAGE": "MESSAGE_CREATE",
+    "ON_MESSAGE_CREATE": "MESSAGE_CREATE",
+    "ON_MESSAGE_UPDATE": "MESSAGE_UPDATE",
+    "ON_MESSAGE_EDIT": "MESSAGE_UPDATE",
+    "ON_MESSAGE_DELETE": "MESSAGE_DELETE",
+}
