@@ -19,6 +19,7 @@ import asyncio
 import json
 from lightcord.handlers import Handlers
 from contextlib import suppress
+from random import random
 
 class Gateway():
     def __init__(self, token: str = None, intents: int = None):
@@ -30,6 +31,9 @@ class Gateway():
         self.heartbeats_task: asyncio.Task = None
         self.session: aiohttp.ClientSession = None
         self.ws: aiohttp.ClientWebSocketResponse = None
+
+        self.heartbeats_interval: float = None
+        self.s_number_of_events: int = None
 
     async def start(self):
         if self.token is None:
@@ -83,22 +87,29 @@ class Gateway():
         }
         await self.ws.send_json(payload)
 
-    async def heartbeats(self, interval: float):
+    async def heartbeats(self):
+        first = True
         try:
             while True:
-                await asyncio.sleep(interval)
-                await self.ws.send_json({"op": 1, "d": 'null'})
+                # The random is just a jitter asked by discord, only for the first heartbeat.
+                await asyncio.sleep(self.heartbeats_interval * random() if first else self.heartbeats_interval)
+                await self.ws.send_json({"op": 1, "d": self.s_number_of_events})
+                first = False
         except asyncio.CancelledError:
             raise
 
     async def opcodes(self):
         async for msg in self.ws:
             d = json.loads(msg.data)
+
+            if d['s']: 
+                self.s_number_of_events = d['s']
             
             if d['op'] == 0: # Event
                 await self.handlers.call_handlers(d['t'], d['d'])
             elif d['op'] == 10: # After connecting
-                self.heartbeats_task = asyncio.create_task(self.heartbeats(d['d']['heartbeat_interval'] / 1000))
+                self.heartbeats_interval = d['d']['heartbeat_interval'] / 1000
+                self.heartbeats_task = asyncio.create_task(self.heartbeats())
                 await self.identify()
             elif d['op'] == 11: # Heartbeat acknowledgement
                 pass
