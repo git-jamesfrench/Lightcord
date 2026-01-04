@@ -42,6 +42,8 @@ class Gateway():
     async def start(self):
         if self.token is None:
             raise ValueError('No token provided.')
+        if self.intents is None:
+            raise ValueError('No intents provided.')
         
         self.session = aiohttp.ClientSession()
         self.websocket_task = asyncio.create_task(self.websocket())
