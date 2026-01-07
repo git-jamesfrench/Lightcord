@@ -1,8 +1,6 @@
 from datetime import datetime
 
 class Snowflake(str):
-    _dictwrapper_type = True
-
     def __new__(cls, value):
         return str.__new__(cls, value)
 
@@ -14,8 +12,6 @@ class Snowflake(str):
         return False
 
 class Timestamp(str):
-    _dictwrapper_type = True
-
     def __new__(cls, value):
         if value is None:
             return None
