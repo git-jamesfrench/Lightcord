@@ -18,41 +18,8 @@ from lightcord.typedata import TypeData
 
 from lightcord.variables import Snowflake
 
-class AvatarDecorationData(TypeData):
-    asset: str
-    sku_id: Snowflake
-    expires_at: int
-    label: str
-    palette: str
-
-class GuildTag(TypeData):
-    tag: str
-    identity_guild_id: int
-    identity_enabled: bool
-    badge: str
-
-class Collectibles(TypeData):
-    nameplate: AvatarDecorationData
-
-class User(TypeData):
+class Overwrite(TypeData):
     id: Snowflake
-    username: str
-    discriminator: str
-    display_name: str
-    global_name: str
-    avatar: str
-    clan: GuildTag
-    bot: bool
-    system: bool
-    mfa_enabled: bool
-    verified: bool
-    email: str
-    locale: str
-    flags: int
-    banner: str
-    banner_color: int
-    accent_color: int
-    premium_type: int
-    public_flags: int
-    primary_guild: GuildTag
-    avatar_decoration_data: AvatarDecorationData
+    type: int
+    allow: str
+    deny: str

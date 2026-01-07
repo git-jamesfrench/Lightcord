@@ -22,10 +22,11 @@
 from lightcord.gateway import Gateway
 from lightcord.handlers import Handlers
 from lightcord.literals import Events
-from lightcord.events import events, events_alias
+from lightcord.events import events_list, events_alias
 from typing import Callable
 from inspect import iscoroutinefunction
 import asyncio
+from anyio import run as run_couroutine
 
 import logging
 logger = logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -43,10 +44,10 @@ class Client():
 
         self.handlers = Handlers()
         self.gateway = Gateway(token, intents)
-        
-    async def start_async(self):
-        await self.gateway.start()
     
+    async def start_async(self):
+        await asyncio.create_task(self.gateway.start())
+
     def start(self, token: str = None, intents: int | str = 0):
         """Start your client, making it online and able to receive events from discord.
         
@@ -62,19 +63,23 @@ class Client():
         for value in self.__dir__():
             function_name = value.upper()
 
-            if function_name in events:
+            if function_name in events_list:
                 self.on(function_name, getattr(self, function_name))
             elif function_name in events_alias:
                 self.on(events_alias[function_name], getattr(self, function_name))
 
         self.gateway.handlers = self.handlers
         
-        # Making so this function can be used in a loop or not (e.g. asyncio.create_task(bot.start()))
         try:
-            asyncio.get_event_loop()
-            return self.start_async()
+            asyncio.get_running_loop()
         except RuntimeError:
-            asyncio.run(self.gateway.start())
+            try:
+                asyncio.run(self.gateway.start())
+            except asyncio.CancelledError:
+                pass
+        else:
+            return self.start_async()
+
         
     async def stop(self) -> None:
         """Stop your client gracefully, making it offline and unable to receive events from discord."""
@@ -103,7 +108,7 @@ class Client():
                 if event is None:
                     function_name = fn.__name__.upper()
 
-                    if function_name in events:
+                    if function_name in events_list:
                         eventname = function_name
                     elif function_name in events_alias:
                         eventname = events_alias[function_name]
@@ -114,11 +119,7 @@ class Client():
 
 
                 # Making the function an handler
-                self.handlers.add_handler(
-                    eventname,
-                    fn,
-                    once
-                )
+                self.handlers.add_handler(eventname, fn, once)
             else:
                 raise ValueError(f'{fn} is not a coroutine!')
         if function is not None: return decorator(function)

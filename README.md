@@ -10,7 +10,7 @@ Current state of Lightcord: **`Unusable`**
 Part 1 - The basis
 - [X] Gateway
 - [X] Handlers
-- [ ] Handlers Arguments
+- [X] Handlers Arguments
 - [ ] Rest API
 - [ ] Intents Calculation
 - [X] Logging

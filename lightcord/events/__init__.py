@@ -14,7 +14,43 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-events = [
+"""
+Events given by discord.
+
+You can import types like this:
+```
+import lightcord.events as events
+
+events.Ready
+```
+(This is still optimized with lazy imports)
+"""
+
+# Magnificient Lazy Importing, yes this was vibecoded, may get back to it but I understand how it works and it's great
+
+from typing import TYPE_CHECKING
+import importlib
+
+_module_map = { # Where is located a function
+    "Ready": "lightcord.events.ready",
+}
+
+if TYPE_CHECKING: # The IDE thinks were importing it, but when executing, it does SHIT, NOTHING, THIS SHIT IS FUCKING CONFUSING
+    from lightcord.events.ready import Ready
+
+__all__ = list(_module_map.keys())
+
+def __getattr__(name: str):
+    if name in _module_map:
+        module = importlib.import_module(_module_map[name])
+        value = getattr(module, name)
+        globals()[name] = value # Honestly, it was chatgpt that said this was important, so we don't go though __getattr__ everytime we want something, but i don't know how it works! i'm learning
+        return value
+    raise AttributeError(f"module 'events' doesn't have the attribute {name}.")
+
+import importlib.util
+
+events_list = [
     "GUILD_BAN_ADD",
     "MESSAGE_UPDATE",
     "GUILD_CREATE",
@@ -103,3 +139,9 @@ events_alias = {
     "ON_MESSAGE_EDIT": "MESSAGE_UPDATE",
     "ON_MESSAGE_DELETE": "MESSAGE_DELETE",
 }
+
+def find_event(event: str):
+    if importlib.util.find_spec(f"lightcord.events.{event.lower()}"):
+        module = importlib.import_module(f"lightcord.events.{event.lower()}")
+        return (getattr(module, "main"), getattr(module, "__types__"))
+    return (None, None)

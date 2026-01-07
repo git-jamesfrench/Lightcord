@@ -48,8 +48,9 @@ class TypeData:
             self.__data__[key] = value
             
             if isinstance(value, dict):
-                if issubclass(types[key], TypeData):
-                    value = TypeData(value)
+                if key in types:
+                    if issubclass(types[key], TypeData):
+                        value = TypeData(value)
             
             setattr(self, key, value)
             

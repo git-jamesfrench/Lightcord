@@ -48,10 +48,7 @@ class Gateway():
         self.session = aiohttp.ClientSession()
         self.websocket_task = asyncio.create_task(self.websocket())
 
-        try:
-            await self.websocket_task
-        except asyncio.CancelledError:
-            pass
+        await self.websocket_task
 
     async def stop(self):
         logging.info("Stop was requested by user code.")

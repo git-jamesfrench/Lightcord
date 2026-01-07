@@ -15,30 +15,18 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lightcord.typedata import TypeData
-from typing import Dict
+from typing import Any, List
 
-from lightcord.types.User import User
-from lightcord.types.Guild import Guild
-from lightcord.types.Application import Application
+from lightcord.types.Emoji import Emoji
 
-class Ready(TypeData):
-    v: int
-    user_settings: dict
-    user: User
-    session_type: str
-    session_id: str
-    resume_gateway_url: str
-    relationships: list
-    private_channels: list
-    presences: list
-    guilds: list[Guild]
-    guild_join_requests: list
-    geo_ordered_rtc_regions: list[str]
-    game_relationships: list
-    auth: dict
-    application: Application
+class ReactionCountDetails(TypeData):
+    burst: int
+    normal: int
 
-def main(data):
-    return {"ready": Ready(data)}
-
-__types__ = {"ready": Ready}
+class Reaction(TypeData):
+    count: int
+    count_details: ReactionCountDetails
+    me: bool
+    me_burst: bool
+    emoji: Emoji
+    burst_colors: List[Any]

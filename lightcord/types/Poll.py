@@ -15,30 +15,32 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lightcord.typedata import TypeData
-from typing import Dict
+from typing import List
 
-from lightcord.types.User import User
-from lightcord.types.Guild import Guild
-from lightcord.types.Application import Application
+from lightcord.variables import Timestamp
+from lightcord.types.Emoji import Emoji
 
-class Ready(TypeData):
-    v: int
-    user_settings: dict
-    user: User
-    session_type: str
-    session_id: str
-    resume_gateway_url: str
-    relationships: list
-    private_channels: list
-    presences: list
-    guilds: list[Guild]
-    guild_join_requests: list
-    geo_ordered_rtc_regions: list[str]
-    game_relationships: list
-    auth: dict
-    application: Application
+class PollMedia(TypeData):
+    text: str
+    emoji: Emoji
 
-def main(data):
-    return {"ready": Ready(data)}
+class PollAnswer(TypeData):
+    answer_id: int
+    poll_media: PollMedia
 
-__types__ = {"ready": Ready}
+class PollAnswerCount(TypeData):
+    id: int
+    count: int
+    me_voted: bool
+
+class PollResults(TypeData):
+    is_finalized: bool
+    answer_counts: List[PollAnswerCount]
+
+class Poll(TypeData):
+    question: PollMedia
+    answers: List[PollAnswer]
+    expiry: Timestamp
+    allow_multiselect: bool
+    layout_type: int
+    results: PollResults
