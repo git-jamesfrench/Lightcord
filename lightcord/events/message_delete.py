@@ -14,11 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from lightcord.types.Message import Message
-from lightcord.types.User import User
+from lightcord.typedata import TypeData
+
+from lightcord.variables import Snowflake
+
+class Message_Delete(TypeData):
+    id: Snowflake
+    channel_id: Snowflake
+    guild_id: Snowflake
 
 def main(data):
-    message = Message(data)
-    return {"message": message, "user": message.author}
+    return {"deleted": Message_Delete(data)}
 
-__types__ = {"message": Message, "user": User}
+__types__ = {"deleted": Message_Delete}

@@ -33,10 +33,12 @@ import importlib
 
 _module_map = { # Where is located a function
     "Ready": "lightcord.events.ready",
+    "Message_Delete": "lightcord.events.message_delete",
 }
 
 if TYPE_CHECKING: # The IDE thinks were importing it, but when executing, it does SHIT, NOTHING, THIS SHIT IS FUCKING CONFUSING
     from lightcord.events.ready import Ready
+    from lightcord.events.message_delete import Message_Delete
 
 __all__ = list(_module_map.keys())
 

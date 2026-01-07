@@ -15,7 +15,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lightcord.typedata import TypeData
-from typing import Dict
 
 from lightcord.types.User import User
 from lightcord.types.Guild import Guild
