@@ -118,6 +118,7 @@ class Message(TypeData):
     async def reply(
         self,
         content: str,
+        *,
         embeds: Embed | List[Embed] = None
     ) -> Message:
         payload = {

@@ -81,8 +81,9 @@ class RestAPI:
                     },
                     timeout=timeout
                 )
+                logging.info("Created session for Rest API.")
         return self.session
     
     async def close(self):
         if self.session or not self.session.closed:
-            self.session.close()
+            await self.session.close()
