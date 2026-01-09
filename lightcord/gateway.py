@@ -68,9 +68,8 @@ class Gateway():
                 await self.opcodes()
 
                 if ws.closed:
-                    message = await ws.receive()
-                    logging.error(f"Connection was closed by discord with close code {ws.close_code} and message: {message.data}")
-                    #print(ws.close_code, message.data)
+                    from lightcord.errors import close_codes
+                    logging.error(f"Connection was closed by discord with close code {ws.close_code}: {close_codes.get(ws.close_code, "Unknown")}")
         except asyncio.CancelledError:
             raise
         finally:
