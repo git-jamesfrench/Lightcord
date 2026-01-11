@@ -15,12 +15,16 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from lightcord.typedata import TypeData
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from lightcord.variables import Snowflake, Timestamp
 from lightcord.types.User import User
 from lightcord.types.Thread import ThreadMetadata, ThreadMember, ForumTag, DefaultReaction
 from lightcord.types.Permissions import Overwrite
+from lightcord.types.Embed import Embed
+
+if TYPE_CHECKING:
+    from lightcord.types.Message import Message
 
 class IconEmoji(TypeData):
     name: str
@@ -70,3 +74,27 @@ class Channel(TypeData):
     default_thread_rate_limit_per_user: int
     default_sort_order: int
     default_forum_layout: int
+
+    async def send(
+        self,
+        content: str,
+        *,
+        embeds: Embed | List[Embed] = None
+    ) -> Message:
+        from lightcord.types.Message import Message
+
+        """
+        Send a message in the channel.
+        
+        :param content: Content of the message.
+        :type content: str
+        :param embeds: Embed(s) of the message.
+        :type embeds: Embed | List[Embed]
+        :return: Message object.
+        :rtype: Message
+        """
+
+        payload = {}
+        payload.setdefault('content', str(content))
+        
+        return Message(await self.api.request('post', f'channels/{self.id}/messages', payload), self.api)

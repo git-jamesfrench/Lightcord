@@ -33,12 +33,14 @@ import importlib
 
 _module_map = { # Where is located a function
     "Message": "lightcord.types.Message",
-    "User": "lightcord.types.User"
+    "User": "lightcord.types.User",
+    "Channel": "lightcord.types.Channel"
 }
 
 if TYPE_CHECKING: # The IDE thinks were importing it, but when executing, it does SHIT, NOTHING, THIS SHIT IS FUCKING CONFUSING
     from lightcord.types.Message import Message
     from lightcord.types.User import User
+    from lightcord.types.Channel import Channel
 
 __all__ = list(_module_map.keys())
 

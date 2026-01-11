@@ -175,6 +175,13 @@ class Message(TypeData):
     ) -> Message:
         """
         Edit the message.
+
+        :param content: Content of the message.
+        :type content: str
+        :param embeds: Embed(s) of the message.
+        :type embeds: Embed | List[Embed]
+        :return: Message object.
+        :rtype: Message
         """
 
         payload = {}
@@ -192,3 +199,31 @@ class Message(TypeData):
         payload = {}
         
         await self.api.request('delete', f'channels/{self.channel_id}/messages/{self.id}', payload)
+
+    async def react(
+        self,
+        emoji: str,
+        id: Snowflake = None
+    ) -> None:
+        """
+        React to the message.
+
+        :param emoji: Unicode emoji (e.g. '🔥'), name of the custom emoji or name + id of the custom emoji (e.g. 'test:123').
+        :type emoji: str
+        :param embeds: Id of the emoji.
+        :type embeds: Snowflake
+        """
+        import re
+
+        if ':' in emoji or id:
+            if id: emoji = f'{emoji}:{str(id)}'
+            else:
+                match = re.fullmatch(r"([A-Za-z0-9_]+):([0-9]+)", emoji) # This time didn't vibecode it, I use chatgpt to learn and I coded that thing.
+                if match:
+                    emoji = f'{match.group(1)}:{match.group(2)}'
+                else:
+                    raise ValueError(f"'{emoji}' is not a valid custom emoji string.")
+        else:
+            emoji = emoji[0]
+        
+        await self.api.request('put', f'channels/{self.channel_id}/messages/{self.id}/reactions/{emoji}/@me', {})
